@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+Development continues as `2.0.1-SNAPSHOT`.
+
 ## 2.0.0 - 2026-08-18
 
 - Upgrade generated deposits from Crossref schema 4.3.6 to 5.5.0.
