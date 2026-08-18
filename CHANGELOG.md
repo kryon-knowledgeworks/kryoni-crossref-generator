@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.0 - unreleased
+## 2.0.0 - 2026-08-18
 
 - Upgrade generated deposits from Crossref schema 4.3.6 to 5.5.0.
 - Validate transformation tests against the official Crossref 5.5.0 XSD 1.1 schema.
