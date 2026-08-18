@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta>
+  <depositor_name>Crossref Deposit Team</depositor_name>
+  <email_address>deposits@example.org</email_address>
+  <registrant>Example Publisher</registrant>
+  <journalTitle>Creative Arts in Education and Therapy</journalTitle>
+  <journalAbbrevTitle>CAET</journalAbbrevTitle>
+  <issnOnline>replace-with-real-issn</issnOnline>
+  <landingUrl>https://example.org/article/replace-me</landingUrl>
+  <pdfUrl>https://example.org/article/replace-me.pdf</pdfUrl>
+  <xmlUrl>https://example.org/article/replace-me.xml</xmlUrl>
+  <htmlUrl>https://example.org/article/replace-me</htmlUrl>
+</meta>
