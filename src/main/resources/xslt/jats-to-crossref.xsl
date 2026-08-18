@@ -20,7 +20,7 @@
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
                 xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-				xmlns="http://www.crossref.org/schema/4.3.6"
+				xmlns="http://www.crossref.org/schema/5.5.0"
 				xmlns:xsldoc="http://www.bacman.net/XSLdoc" 
 				xmlns:xlink="http://www.w3.org/1999/xlink" 
 				xmlns:jats="http://www.ncbi.nlm.nih.gov/JATS1"
@@ -29,7 +29,7 @@
 				xmlns:fr="http://www.crossref.org/fundref.xsd"
 				xmlns:ai="http://www.crossref.org/AccessIndicators.xsd"
 				xmlns:jatsFn="http://www.crossref.org/functions/jats"
-				exclude-result-prefixes="xsldoc">
+				exclude-result-prefixes="xsldoc xs str xlink jatsFn">
 
 <xsl:output method="xml" 
             indent="yes" 
@@ -67,9 +67,8 @@
 <xsl:template match="/">
 	<xsl:choose>
 		<xsl:when test="article">
-			<doi_batch version="4.3.6">
-					<xsl:attribute name="xsi:schemaLocation">http://www.crossref.org/schema/4.3.6
-						http://www.crossref.org/schema/deposit/crossref4.3.6.xsd</xsl:attribute>
+			<doi_batch version="5.5.0">
+					<xsl:attribute name="xsi:schemaLocation">http://www.crossref.org/schema/5.5.0 https://data.crossref.org/schemas/crossref5.5.0.xsd</xsl:attribute>
 				<head>
 					<xsl:apply-templates select="//front"/>
 
@@ -829,7 +828,7 @@
 		<xsl:variable name="crawlerUrl" select="if (normalize-space($htmlUrl) != '') then $htmlUrl else concat($base, '.html')"/>
 
 		<collection property="crawler-based">
-			<item crawler="iParadigms">
+			<item crawler="similarity-check">
 				<resource>
 					<xsl:value-of select="$crawlerUrl"/>
 				</resource>

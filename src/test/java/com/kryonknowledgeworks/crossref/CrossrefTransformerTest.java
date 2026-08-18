@@ -4,7 +4,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.validation.SchemaFactory;
 import javax.xml.xpath.XPathFactory;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -53,7 +55,7 @@ class CrossrefTransformerTest {
                   <email_address>deposit@example.org</email_address>
                   <registrant>Example Publisher</registrant>
                   <journalTitle>Configured title</journalTitle>
-                  <issnOnline>3333-4444</issnOnline>
+                  <issnOnline>1234-5679</issnOnline>
                   <landingUrl>https://example.org/articles/example</landingUrl>
                   <license>https://creativecommons.org/licenses/by/4.0/</license>
                   <license>https://creativecommons.org/licenses/by/4.0/</license>
@@ -66,12 +68,15 @@ class CrossrefTransformerTest {
         factory.setNamespaceAware(true);
         var document = factory.newDocumentBuilder().parse(output.toFile());
         assertEquals("Configured title", document.getElementsByTagNameNS("*", "full_title").item(0).getTextContent());
-        assertEquals("3333-4444", document.getElementsByTagNameNS("*", "issn").item(0).getTextContent());
+        assertEquals("http://www.crossref.org/schema/5.5.0", document.getDocumentElement().getNamespaceURI());
+        assertEquals("5.5.0", document.getDocumentElement().getAttribute("version"));
+        assertEquals("1234-5679", document.getElementsByTagNameNS("*", "issn").item(0).getTextContent());
         assertEquals("https://orcid.org/0000-0001-2345-6789", document.getElementsByTagNameNS("*", "ORCID").item(0).getTextContent());
         assertEquals("10.1234/Cited.DOI", XPathFactory.newInstance().newXPath()
                 .evaluate("string(//*[local-name()='citation']/*[local-name()='doi'])", document));
         assertEquals(1, document.getElementsByTagNameNS("http://www.crossref.org/AccessIndicators.xsd", "license_ref").getLength());
         assertEquals(0, document.getElementsByTagNameNS("http://www.crossref.org/AccessIndicators.xsd", "free_to_read").getLength());
+        validateAgainstCrossref55(output);
 
         Path freeToReadOutput = temp.resolve("deposit-free-to-read.xml");
         new CrossrefTransformer().transform(jats, meta, freeToReadOutput,
@@ -93,5 +98,12 @@ class CrossrefTransformerTest {
 
         String result = Files.readString(output);
         assertTrue(result.contains("<full_title>JATS title</full_title>"));
+    }
+
+    private static void validateAgainstCrossref55(Path output) throws Exception {
+        SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/XML/XMLSchema/v1.1");
+        var schema = schemaFactory.newSchema(
+                URI.create("https://data.crossref.org/schemas/crossref5.5.0.xsd").toURL());
+        schema.newValidator().validate(new javax.xml.transform.stream.StreamSource(output.toFile()));
     }
 }
