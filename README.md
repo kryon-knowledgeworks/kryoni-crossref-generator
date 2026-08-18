@@ -59,7 +59,7 @@ new CrossrefTransformer().transform(
     Map.of("metadata_precedence", "meta-first"));
 ```
 
-For shared use, publish releases to your existing Nexus/Artifactory/GitHub Packages repository. Keep repository credentials in Maven `settings.xml`, not in this repository.
+For shared use, publish releases to your existing Nexus/Artifactory/GitHub Packages repository. Keep repository credentials in Maven `settings.xml`, not in this repository. See [Publishing](docs/PUBLISHING.md) for the release and consumer configuration.
 
 ## Versioning and maintenance
 

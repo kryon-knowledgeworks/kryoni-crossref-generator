@@ -4,9 +4,15 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/** Command-line entry point for the executable {@code all} JAR. */
 public final class Main {
     private Main() {}
 
+    /**
+     * Runs one JATS-to-Crossref transformation from command-line arguments.
+     *
+     * @param args CLI options; use {@code --help} to display usage
+     */
     public static void main(String[] args) {
         try {
             Arguments parsed = Arguments.parse(args);

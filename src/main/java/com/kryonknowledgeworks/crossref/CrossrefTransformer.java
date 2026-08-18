@@ -31,6 +31,7 @@ public final class CrossrefTransformer {
     private final Processor processor;
     private final XsltExecutable executable;
 
+    /** Compiles the packaged canonical stylesheet for reuse by this transformer. */
     public CrossrefTransformer() {
         try {
             processor = new Processor(false);
@@ -45,11 +46,30 @@ public final class CrossrefTransformer {
         }
     }
 
+    /**
+     * Transforms a JATS article using the companion project metadata and default mapping options.
+     *
+     * @param jatsXml input JATS XML file
+     * @param metadataXml companion project metadata XML file
+     * @param outputXml destination Crossref deposit XML file
+     * @throws IOException if an input cannot be read, the output cannot be written, or XML parsing cannot be secured
+     * @throws SaxonApiException if the XSLT transformation fails
+     */
     public void transform(Path jatsXml, Path metadataXml, Path outputXml)
             throws IOException, SaxonApiException {
         transform(jatsXml, metadataXml, outputXml, Map.of());
     }
 
+    /**
+     * Transforms a JATS article using explicit stylesheet parameter values.
+     *
+     * @param jatsXml input JATS XML file
+     * @param metadataXml companion project metadata XML file
+     * @param outputXml destination Crossref deposit XML file
+     * @param parameters stylesheet parameter names and string values
+     * @throws IOException if an input cannot be read, the output cannot be written, or XML parsing cannot be secured
+     * @throws SaxonApiException if the XSLT transformation fails
+     */
     public void transform(Path jatsXml, Path metadataXml, Path outputXml, Map<String, String> parameters)
             throws IOException, SaxonApiException {
         Path input = jatsXml.toAbsolutePath().normalize();
