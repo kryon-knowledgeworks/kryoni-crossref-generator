@@ -4,21 +4,21 @@ Use a private Maven registry until the redistribution license of the inherited s
 
 The normal artifact is the reusable library. The `all` classifier is the executable CLI and should not be used as a consumer dependency.
 
-## One-time GitHub Packages setup
+## GitHub Packages setup
 
-Create a dedicated source repository, preferably `kryon-knowledgeworks/jats-crossref-transformer`, and push this Git history to it. Then add this block after `</dependencies>` in `pom.xml`, replacing the owner and repository if necessary:
+This project is linked to `kryon-knowledgeworks/kryoni-crossref-generator`. Its `pom.xml` already contains this deployment configuration:
 
 ```xml
 <distributionManagement>
   <repository>
     <id>github</id>
     <name>GitHub Packages</name>
-    <url>https://maven.pkg.github.com/kryon-knowledgeworks/jats-crossref-transformer</url>
+    <url>https://maven.pkg.github.com/kryon-knowledgeworks/kryoni-crossref-generator</url>
   </repository>
   <snapshotRepository>
     <id>github</id>
     <name>GitHub Packages</name>
-    <url>https://maven.pkg.github.com/kryon-knowledgeworks/jats-crossref-transformer</url>
+    <url>https://maven.pkg.github.com/kryon-knowledgeworks/kryoni-crossref-generator</url>
   </snapshotRepository>
 </distributionManagement>
 ```
@@ -39,22 +39,22 @@ Put credentials in the developer or CI user's Maven `settings.xml`, never in the
 </settings>
 ```
 
-The server `id` must match the repository `id` in the POM. For a developer workstation, set `GITHUB_ACTOR` to the GitHub username and `GITHUB_TOKEN` to a classic personal access token with package permissions. In GitHub Actions, use the repository's `GITHUB_TOKEN` with `contents: read` and `packages: write` permissions.
+The server `id` must match the repository `id` in the POM. For a developer workstation, set `GITHUB_ACTOR` to the GitHub username and `GITHUB_TOKEN` to a classic personal access token with package permissions. The committed GitHub Actions workflow creates Maven settings automatically and uses the repository's `GITHUB_TOKEN` with `contents: read` and `packages: write` permissions.
 
 ## Release
 
-Keep `SNAPSHOT` versions for integration testing. For an immutable release:
+Keep `SNAPSHOT` versions for integration testing. Releases are published by `.github/workflows/ci.yml` only from an annotated version tag. The tag must exactly match the non-snapshot POM version:
 
 ```shell
 mvn versions:set -DnewVersion=2.0.0 -DgenerateBackupPoms=false
-mvn clean deploy
+mvn clean verify
 git add pom.xml
 git commit -m "Release 2.0.0"
 git tag -a v2.0.0 -m "JATS to Crossref transformer 2.0.0"
 git push origin main --follow-tags
 ```
 
-Run `mvn clean verify` before deploying when the deployment is performed separately. Never overwrite a released version; increment the patch, minor, or major version and publish a new artifact.
+The tag workflow reruns all tests and then executes `mvn clean deploy`. Never overwrite a released version; increment the patch, minor, or major version and publish a new artifact.
 
 After releasing, advance the development branch to the next snapshot, for example `2.0.1-SNAPSHOT`.
 
@@ -66,7 +66,7 @@ Add the registry and normal library dependency to the consumer POM:
 <repositories>
   <repository>
     <id>github</id>
-    <url>https://maven.pkg.github.com/kryon-knowledgeworks/jats-crossref-transformer</url>
+    <url>https://maven.pkg.github.com/kryon-knowledgeworks/kryoni-crossref-generator</url>
   </repository>
 </repositories>
 
