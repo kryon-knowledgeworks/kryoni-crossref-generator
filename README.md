@@ -11,6 +11,7 @@ The supplied `_web.xsl` and `_web1.xsl` files are forks, not cleanly separated f
 | `metadata_precedence` | `meta-first` | Use `meta-first` for current journal/DB values or `jats-first` for source-document values. |
 | `require_issn` | `false` | Fail instead of omitting ISSN when neither source supplies one. |
 | `ignore_issn` | `true` | Compatibility alias for old callers; `false` requires an ISSN. |
+| `emit_free_to_read` | `false` | Explicitly emit the separate Crossref free-to-read access indicator. |
 
 Add a second XSLT only if a consumer has a genuinely different output contract (for example, another Crossref schema generation). In that case, make it a thin named profile that imports shared modules—never `web2`, `final`, or copied files.
 
@@ -64,6 +65,7 @@ For shared use, publish releases to your existing Nexus/Artifactory/GitHub Packa
 - Pin consumer projects to a released version. Avoid `LATEST`, version ranges, and direct XSL filesystem paths.
 - Change the XSLT and its tests in the same pull request. `mvn verify` compiles the stylesheet and runs transformation tests.
 - Reference DOIs are discovered in nested `pub-id` or `ext-link` structures and normalized from resolver URLs or `doi:` prefixes to bare DOI values.
+- License mapping selects either metadata or JATS according to `metadata_precedence`, deduplicates identical entries, and emits one `license_ref` per distinct license/application tuple. Open-access licenses do not implicitly emit the separate `free_to_read` indicator.
 - Tag releases (`v1.0.0`) and retain `SNAPSHOT` only on active development branches.
 - Before public redistribution, confirm and document the license/provenance of the Aptara/Crossref-derived stylesheet. SaxonJ-HE itself is MPL-2.0.
 

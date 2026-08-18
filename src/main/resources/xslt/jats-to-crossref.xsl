@@ -40,6 +40,7 @@
 	<xsl:param name="meta" as="xs:string" select="''"/>
 	<xsl:param name="metadata_precedence" as="xs:string" select="'meta-first'"/>
 	<xsl:param name="require_issn" as="xs:string" select="'false'"/>
+	<xsl:param name="emit_free_to_read" as="xs:string" select="'false'"/>
 	<!-- Backward-compatible alias from the legacy stylesheet. -->
 	<xsl:param name="ignore_issn" as="xs:string" select="'true'"/>
 	<xsl:variable name="metafile">
@@ -627,46 +628,29 @@
 
 
 
-	<!-- license URL -->
+	<!-- License and access status. Select one authoritative source and deduplicate there. -->
 	<xsl:function name="jatsFn:accessIndicator" as="element(ai:program)?">
-    <xsl:param name="permissions" as="element()?"/>
+		<xsl:param name="permissions" as="element()?"/>
+		<xsl:variable name="jatsLicenses" as="element()*" select="$permissions/license[normalize-space(@xlink:href) != '']"/>
+		<xsl:variable name="metaLicenses" as="element()*" select="$metafile/meta/license[normalize-space(.) != '']"/>
+		<xsl:variable name="selectedLicenses" as="element()*"
+			select="if ($metadata_precedence = 'jats-first') then (if (exists($jatsLicenses)) then $jatsLicenses else $metaLicenses) else (if (exists($metaLicenses)) then $metaLicenses else $jatsLicenses)"/>
+		<xsl:variable name="isFreeToRead" select="lower-case(normalize-space($emit_free_to_read)) = 'true'"/>
 
-    <!-- Create a variable to hold the access indicators -->
-    <xsl:variable name="indicators" as="element()*">
-        <!-- Check if the license type is 'open-access' or 'free' and add the free_to_read element -->
-        <xsl:if test="$permissions/license[@license-type=('open-access', 'free')]">
-            <xsl:element name="free_to_read" namespace="http://www.crossref.org/AccessIndicators.xsd"/>
-        </xsl:if>
-
-        <!-- Apply templates for access indicators and meta license information -->
-        <xsl:apply-templates select="$permissions/license" mode="access-indicators"/>
-        <xsl:apply-templates select="$metafile/meta/license" mode="fromMeta"/>
-    </xsl:variable>
-
-    <!-- If there are any indicators, create the ai:program element -->
-    <xsl:if test="not(empty($indicators))">
-        <xsl:element name="ai:program" namespace="http://www.crossref.org/AccessIndicators.xsd">
-            <xsl:attribute name="name">AccessIndicators</xsl:attribute>
-            <xsl:sequence select="$indicators"/>
-        </xsl:element>
-    </xsl:if>
-</xsl:function>
-	
-	
-	
-
-	<xsl:template match="license" mode="fromMeta">
-		<ai:license_ref>
-			<xsl:if test="@applies_to"><xsl:attribute name="applies_to" select="@applies_to"/></xsl:if>
-			<xsl:value-of select="."/>
-		</ai:license_ref>
-	</xsl:template>
-
-	<!-- http://tdmsupport.crossref.org/license-uris-technical-details/ -->
-	<xsl:template match="license[@xlink:href]" mode="access-indicators">
-		<ai:license_ref><xsl:value-of select="@xlink:href"/></ai:license_ref>
-	</xsl:template>
-	<xsl:template match="*" mode="access-indicators" priority="-1"/>
+		<xsl:if test="$isFreeToRead or exists($selectedLicenses)">
+			<ai:program name="AccessIndicators">
+				<xsl:if test="$isFreeToRead"><ai:free_to_read/></xsl:if>
+				<xsl:for-each-group select="$selectedLicenses"
+					group-by="concat(normalize-space((@xlink:href, string(.))[1]), '|', normalize-space(@applies_to), '|', normalize-space(@start_date))">
+					<ai:license_ref>
+						<xsl:if test="normalize-space(@applies_to) != ''"><xsl:attribute name="applies_to" select="@applies_to"/></xsl:if>
+						<xsl:if test="normalize-space(@start_date) != ''"><xsl:attribute name="start_date" select="@start_date"/></xsl:if>
+						<xsl:value-of select="normalize-space((@xlink:href, string(.))[1])"/>
+					</ai:license_ref>
+				</xsl:for-each-group>
+			</ai:program>
+		</xsl:if>
+	</xsl:function>
 
 	<!-- fundref -->
 	

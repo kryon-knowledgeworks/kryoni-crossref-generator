@@ -33,6 +33,7 @@ public final class Main {
                   metadata_precedence  meta-first (default) or jats-first
                   require_issn         true to fail when neither source contains an ISSN
                   ignore_issn          legacy compatibility alias (false means ISSN is required)
+                  emit_free_to_read    true only when content should explicitly be marked free to read
                 """);
     }
 

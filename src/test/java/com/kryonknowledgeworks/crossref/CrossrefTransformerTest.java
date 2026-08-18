@@ -34,6 +34,7 @@ class CrossrefTransformerTest {
                       <title-group><article-title>Example article</article-title></title-group>
                       <contrib-group><contrib contrib-type="author"><contrib-id contrib-id-type="orcid">0000-0001-2345-6789</contrib-id><name><surname>Doe</surname><given-names>Jane</given-names></name></contrib></contrib-group>
                       <pub-date pub-type="epub"><year>2026</year></pub-date>
+                      <permissions><license license-type="open-access" xlink:href="https://creativecommons.org/licenses/by/4.0/"/></permissions>
                     </article-meta>
                   </front>
                   <back>
@@ -54,6 +55,8 @@ class CrossrefTransformerTest {
                   <journalTitle>Configured title</journalTitle>
                   <issnOnline>3333-4444</issnOnline>
                   <landingUrl>https://example.org/articles/example</landingUrl>
+                  <license>https://creativecommons.org/licenses/by/4.0/</license>
+                  <license>https://creativecommons.org/licenses/by/4.0/</license>
                 </meta>
                 """);
 
@@ -67,6 +70,15 @@ class CrossrefTransformerTest {
         assertEquals("https://orcid.org/0000-0001-2345-6789", document.getElementsByTagNameNS("*", "ORCID").item(0).getTextContent());
         assertEquals("10.1234/Cited.DOI", XPathFactory.newInstance().newXPath()
                 .evaluate("string(//*[local-name()='citation']/*[local-name()='doi'])", document));
+        assertEquals(1, document.getElementsByTagNameNS("http://www.crossref.org/AccessIndicators.xsd", "license_ref").getLength());
+        assertEquals(0, document.getElementsByTagNameNS("http://www.crossref.org/AccessIndicators.xsd", "free_to_read").getLength());
+
+        Path freeToReadOutput = temp.resolve("deposit-free-to-read.xml");
+        new CrossrefTransformer().transform(jats, meta, freeToReadOutput,
+                Map.of("require_issn", "true", "emit_free_to_read", "true"));
+        var freeToReadDocument = factory.newDocumentBuilder().parse(freeToReadOutput.toFile());
+        assertEquals(1, freeToReadDocument
+                .getElementsByTagNameNS("http://www.crossref.org/AccessIndicators.xsd", "free_to_read").getLength());
     }
 
     @Test
