@@ -63,6 +63,7 @@ For shared use, publish releases to your existing Nexus/Artifactory/GitHub Packa
 - Use semantic versions for this artifact. Bug-compatible mapping fixes are patches; new optional mapping features are minors; output-breaking changes or a schema-generation change are majors.
 - Pin consumer projects to a released version. Avoid `LATEST`, version ranges, and direct XSL filesystem paths.
 - Change the XSLT and its tests in the same pull request. `mvn verify` compiles the stylesheet and runs transformation tests.
+- Reference DOIs are discovered in nested `pub-id` or `ext-link` structures and normalized from resolver URLs or `doi:` prefixes to bare DOI values.
 - Tag releases (`v1.0.0`) and retain `SNAPSHOT` only on active development branches.
 - Before public redistribution, confirm and document the license/provenance of the Aptara/Crossref-derived stylesheet. SaxonJ-HE itself is MPL-2.0.
 

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPathFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -35,6 +36,14 @@ class CrossrefTransformerTest {
                       <pub-date pub-type="epub"><year>2026</year></pub-date>
                     </article-meta>
                   </front>
+                  <back>
+                    <ref-list>
+                      <ref id="R1"><element-citation publication-type="journal">
+                        <article-title>Cited article</article-title><source>Cited Journal</source><year>2025</year>
+                        <comment><ext-link ext-link-type="doi" xlink:href="https://doi.org/10.1234/Cited.DOI"/></comment>
+                      </element-citation></ref>
+                    </ref-list>
+                  </back>
                 </article>
                 """);
         Files.writeString(meta, """
@@ -56,6 +65,8 @@ class CrossrefTransformerTest {
         assertEquals("Configured title", document.getElementsByTagNameNS("*", "full_title").item(0).getTextContent());
         assertEquals("3333-4444", document.getElementsByTagNameNS("*", "issn").item(0).getTextContent());
         assertEquals("https://orcid.org/0000-0001-2345-6789", document.getElementsByTagNameNS("*", "ORCID").item(0).getTextContent());
+        assertEquals("10.1234/Cited.DOI", XPathFactory.newInstance().newXPath()
+                .evaluate("string(//*[local-name()='citation']/*[local-name()='doi'])", document));
     }
 
     @Test

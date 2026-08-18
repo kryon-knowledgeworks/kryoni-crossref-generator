@@ -54,6 +54,12 @@
 <xsl:variable name="tempdatetime" select="concat($date,'',$time)"/>
 <xsl:variable name="datetime" select="translate($tempdatetime,':-.','')"/>
 
+<xsl:function name="jatsFn:normalize-doi" as="xs:string?">
+	<xsl:param name="raw" as="xs:string?"/>
+	<xsl:variable name="withoutResolver" select="replace(normalize-space($raw), '^https?://(dx\.)?doi\.org/', '', 'i')"/>
+	<xsl:sequence select="if ($withoutResolver = '') then () else replace($withoutResolver, '^doi:\s*', '', 'i')"/>
+</xsl:function>
+
 <!-- ========================================================================== -->
 <!-- Root Element                                                               -->
 <!-- ========================================================================== -->
@@ -446,6 +452,8 @@
 </xsl:template>
 
 <xsl:template match="element-citation | citation | nlm-citation | mixed-citation">
+	<xsl:variable name="referenceDoi" as="xs:string?"
+		select="jatsFn:normalize-doi((.//pub-id[@pub-id-type='doi']/string(), .//ext-link[@ext-link-type='doi']/@xlink:href/string(), .//ext-link[@ext-link-type='doi']/string())[normalize-space(.)][1])"/>
 	<xsl:choose>
 		<xsl:when test="@publication-type='journal' or @citation-type='journal'">
 			<xsl:if test="issn">
@@ -497,9 +505,9 @@
 					<xsl:apply-templates select="article-title"/>
 				</article_title>
 			</xsl:if>
-			<xsl:if test="pub-id[@pub-id-type='doi'] or ext-link[@ext-link-type='doi']">
+			<xsl:if test="$referenceDoi">
 				<doi>
-					<xsl:value-of select="(pub-id[@pub-id-type='doi'], ext-link[@ext-link-type='doi'])[1]"/>
+					<xsl:value-of select="$referenceDoi"/>
 				</doi>
 			</xsl:if>
 		</xsl:when>
@@ -543,9 +551,9 @@
 					<xsl:apply-templates select="article-title"/>
 				</article_title>
 			</xsl:if>
-			<xsl:if test="pub-id[@pub-id-type='doi'] or ext-link[@ext-link-type='doi']">
+			<xsl:if test="$referenceDoi">
 				<doi>
-					<xsl:value-of select="(pub-id[@pub-id-type='doi'], ext-link[@ext-link-type='doi'])[1]"/>
+					<xsl:value-of select="$referenceDoi"/>
 				</doi>
 			</xsl:if>
 		</xsl:when>
