@@ -59,7 +59,7 @@ new CrossrefTransformer().transform(
     Map.of("metadata_precedence", "meta-first"));
 ```
 
-For shared use, publish releases to your existing Nexus/Artifactory/GitHub Packages repository. Keep repository credentials in Maven `settings.xml`, not in this repository. See [Publishing](docs/PUBLISHING.md) for the release and consumer configuration.
+Released versions are published to Maven Central. Consumers need no repository declaration or authentication; Maven Central is part of Maven's default repository configuration. See [Publishing](docs/PUBLISHING.md) for the maintainer release procedure.
 
 ## Versioning and maintenance
 
@@ -69,6 +69,6 @@ For shared use, publish releases to your existing Nexus/Artifactory/GitHub Packa
 - Reference DOIs are discovered in nested `pub-id` or `ext-link` structures and normalized from resolver URLs or `doi:` prefixes to bare DOI values.
 - License mapping selects either metadata or JATS according to `metadata_precedence`, deduplicates identical entries, and emits one `license_ref` per distinct license/application tuple. Open-access licenses do not implicitly emit the separate `free_to_read` indicator.
 - Tag releases (`v1.0.0`) and retain `SNAPSHOT` only on active development branches.
-- Before public redistribution, confirm and document the license/provenance of the Aptara/Crossref-derived stylesheet. SaxonJ-HE itself is MPL-2.0.
+- The project, including its canonical stylesheet, is released by Kryon Knowledge Works under the MIT License. SaxonJ-HE remains separately licensed under MPL-2.0.
 
 The Crossref output uses schema `5.5.0`. Treat future Crossref schema upgrades as intentional, tested releases rather than silently changing them with a Saxon upgrade.

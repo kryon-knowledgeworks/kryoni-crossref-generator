@@ -1,29 +1,62 @@
-# Publishing the Maven library
+# Publishing to Maven Central
 
-Use a private Maven registry until the redistribution license of the inherited stylesheet has been confirmed. GitHub Packages is the simplest option when the source and consumer projects are already on GitHub; use the organization's Nexus or Artifactory instance if one is already managed centrally.
+Releases are published to Maven Central through the Sonatype Central Publisher Portal. Consumer projects do not need GitHub credentials, a Maven `settings.xml` entry, or a custom `<repository>` declaration.
 
-The normal artifact is the reusable library. The `all` classifier is the executable CLI and should not be used as a consumer dependency.
+## One-time publisher setup
 
-## GitHub Packages setup
+1. Sign in at <https://central.sonatype.com/>.
+2. Create and verify the namespace `com.kryonknowledgeworks`. This normally requires proving control of `kryonknowledgeworks.com`.
+3. On the Central Portal account page, generate a user token. The generated token username and token password are distinct from the interactive account password.
+4. Create a GPG signing key for the organization and publish its public key to a public keyserver.
+5. Add these GitHub Actions repository secrets:
 
-This project is linked to `kryon-knowledgeworks/kryoni-crossref-generator`. Its `pom.xml` already contains this deployment configuration:
+   | Secret | Value |
+   |---|---|
+   | `CENTRAL_USERNAME` | Central Portal user-token username |
+   | `CENTRAL_TOKEN` | Central Portal user-token password |
+   | `GPG_PRIVATE_KEY` | ASCII-armored private key exported with `gpg --armor --export-secret-keys KEY_ID` |
+   | `GPG_PASSPHRASE` | Passphrase protecting that private key |
 
-```xml
-<distributionManagement>
-  <repository>
-    <id>github</id>
-    <name>GitHub Packages</name>
-    <url>https://maven.pkg.github.com/kryon-knowledgeworks/kryoni-crossref-generator</url>
-  </repository>
-  <snapshotRepository>
-    <id>github</id>
-    <name>GitHub Packages</name>
-    <url>https://maven.pkg.github.com/kryon-knowledgeworks/kryoni-crossref-generator</url>
-  </snapshotRepository>
-</distributionManagement>
+Never commit Central credentials, a private signing key, or its passphrase.
+
+## Release configuration
+
+The `central-release` Maven profile:
+
+- signs the POM, normal library JAR, sources JAR, and Javadoc JAR;
+- creates the Maven Central bundle and checksums;
+- uploads, validates, and publishes the release through the Central Portal;
+- waits until the deployment reaches the published state.
+
+Normal `mvn verify` builds do not activate signing or publishing.
+
+## Release procedure
+
+Maven Central releases are immutable. Choose a new version and verify it before creating its tag. The repository is currently prepared for `2.0.1`:
+
+```shell
+mvn versions:set -DnewVersion=2.0.1 -DgenerateBackupPoms=false
+mvn clean verify
+git add pom.xml
+git commit -m "Release 2.0.1"
+git tag -a v2.0.1 -m "JATS to Crossref transformer 2.0.1"
+git push origin main --follow-tags
 ```
 
-Put credentials in the developer or CI user's Maven `settings.xml`, never in the POM or Git repository:
+The tag workflow verifies that `v2.0.1` exactly matches POM version `2.0.1`, reruns the tests, signs every artifact, and publishes it to Maven Central. Do not move or reuse a release tag.
+
+After publication, advance the branch:
+
+```shell
+mvn versions:set -DnewVersion=2.0.2-SNAPSHOT -DgenerateBackupPoms=false
+git add pom.xml
+git commit -m "Start 2.0.2 development"
+git push origin main
+```
+
+## Local Central deployment
+
+CI is preferred. For an authorized local deployment, put the generated Central user-token credentials in the developer's `~/.m2/settings.xml`:
 
 ```xml
 <settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
@@ -31,56 +64,30 @@ Put credentials in the developer or CI user's Maven `settings.xml`, never in the
           xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
   <servers>
     <server>
-      <id>github</id>
-      <username>${env.GITHUB_ACTOR}</username>
-      <password>${env.GITHUB_TOKEN}</password>
+      <id>central</id>
+      <username>${env.CENTRAL_USERNAME}</username>
+      <password>${env.CENTRAL_TOKEN}</password>
     </server>
   </servers>
 </settings>
 ```
 
-The server `id` must match the repository `id` in the POM. For a developer workstation, set `GITHUB_ACTOR` to the GitHub username and `GITHUB_TOKEN` to a classic personal access token with package permissions. The committed GitHub Actions workflow creates Maven settings automatically and uses the repository's `GITHUB_TOKEN` with `contents: read` and `packages: write` permissions.
-
-## Release
-
-Keep `SNAPSHOT` versions for integration testing. Releases are published by `.github/workflows/ci.yml` only from an annotated version tag. The tag must exactly match the non-snapshot POM version:
+Import the signing key into GnuPG, supply its passphrase securely through the `MAVEN_GPG_PASSPHRASE` environment variable or `gpg-agent`, and run:
 
 ```shell
-mvn versions:set -DnewVersion=2.0.0 -DgenerateBackupPoms=false
-mvn clean verify
-git add pom.xml
-git commit -m "Release 2.0.0"
-git tag -a v2.0.0 -m "JATS to Crossref transformer 2.0.0"
-git push origin main --follow-tags
+mvn -Pcentral-release clean deploy
 ```
 
-The tag workflow reruns all tests and then executes `mvn clean deploy`. Never overwrite a released version; increment the patch, minor, or major version and publish a new artifact.
+## Consumer configuration
 
-After releasing, advance the development branch to the next snapshot, for example `2.0.1-SNAPSHOT`.
-
-## Consume from another project
-
-Add the registry and normal library dependency to the consumer POM:
+Once Central has synchronized the release, another Maven project needs only:
 
 ```xml
-<repositories>
-  <repository>
-    <id>github</id>
-    <url>https://maven.pkg.github.com/kryon-knowledgeworks/kryoni-crossref-generator</url>
-  </repository>
-</repositories>
-
-<dependencies>
-  <dependency>
-    <groupId>com.kryonknowledgeworks</groupId>
-    <artifactId>jats-crossref-transformer</artifactId>
-    <version>2.0.0</version>
-  </dependency>
-</dependencies>
+<dependency>
+  <groupId>com.kryonknowledgeworks</groupId>
+  <artifactId>jats-crossref-transformer</artifactId>
+  <version>2.0.1</version>
+</dependency>
 ```
 
-The consumer also needs a matching `github` server entry in its user or CI Maven `settings.xml`. GitHub Packages requires authentication even when downloading many package configurations.
-
-## Maven Central later
-
-Maven Central is public and released coordinates are immutable. Do not publish there until the stylesheet provenance and redistribution license are documented. A Central release also needs a project URL, SCM and developer metadata, a declared license, source and Javadoc JARs, and artifact signing. This build already attaches the source and Javadoc JARs; the legal and project identity metadata must be supplied before a Central release.
+The dependency-bundled `all` CLI JAR is intentionally not published to Maven Central. It remains a local build artifact; consumers should use the normal library artifact.

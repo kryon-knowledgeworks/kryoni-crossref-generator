@@ -16,9 +16,27 @@
     <url>https://www.kryonknowledgeworks.com/</url>
   </organization>
 
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/license/mit</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <id>kryon-knowledgeworks</id>
+      <name>Kryon Knowledge Works Engineering</name>
+      <email>rogan@kryonknowledgeworks.com</email>
+      <organization>Kryon Knowledge Works</organization>
+      <organizationUrl>https://www.kryonknowledgeworks.com/</organizationUrl>
+    </developer>
+  </developers>
+
   <scm>
     <connection>scm:git:https://github.com/kryon-knowledgeworks/kryoni-crossref-generator.git</connection>
-    <developerConnection>scm:git:https://github.com/kryon-knowledgeworks/kryoni-crossref-generator.git</developerConnection>
+    <developerConnection>scm:git:ssh://git@github.com/kryon-knowledgeworks/kryoni-crossref-generator.git</developerConnection>
     <url>https://github.com/kryon-knowledgeworks/kryoni-crossref-generator</url>
     <tag>HEAD</tag>
   </scm>
@@ -26,6 +44,7 @@
   <properties>
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <shade.skip>false</shade.skip>
     <saxon.version>12.10</saxon.version>
     <junit.version>5.13.4</junit.version>
   </properties>
@@ -63,20 +82,19 @@
     </dependency>
   </dependencies>
 
-  <distributionManagement>
-    <repository>
-      <id>github</id>
-      <name>GitHub Packages</name>
-      <url>https://maven.pkg.github.com/kryon-knowledgeworks/kryoni-crossref-generator</url>
-    </repository>
-    <snapshotRepository>
-      <id>github</id>
-      <name>GitHub Packages</name>
-      <url>https://maven.pkg.github.com/kryon-knowledgeworks/kryoni-crossref-generator</url>
-    </snapshotRepository>
-  </distributionManagement>
-
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>${project.basedir}</directory>
+        <targetPath>META-INF</targetPath>
+        <includes>
+          <include>LICENSE</include>
+        </includes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -100,6 +118,7 @@
             <phase>package</phase>
             <goals><goal>shade</goal></goals>
             <configuration>
+              <skip>${shade.skip}</skip>
               <shadedArtifactAttached>true</shadedArtifactAttached>
               <shadedClassifierName>all</shadedClassifierName>
               <createDependencyReducedPom>false</createDependencyReducedPom>
@@ -151,4 +170,44 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>central-release</id>
+      <properties>
+        <!-- Publish the reusable library; keep the dependency-bundled CLI out of Central. -->
+        <shade.skip>true</shade.skip>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>3.2.8</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals><goal>sign</goal></goals>
+              </execution>
+            </executions>
+            <configuration>
+              <bestPractices>true</bestPractices>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>0.11.0</version>
+            <extensions>true</extensions>
+            <configuration>
+              <publishingServerId>central</publishingServerId>
+              <autoPublish>true</autoPublish>
+              <waitUntil>published</waitUntil>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
